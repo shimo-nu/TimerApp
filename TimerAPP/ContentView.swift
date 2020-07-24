@@ -48,33 +48,42 @@ struct ContentView_Previews: PreviewProvider {
 struct TimerView: View {
     @State var sec: CGFloat = 0.75
     @State var isStart = false
+    @State var isStop = false
     @State var hour = 0
     @State var minute = 0
     @State var second = 0
-    @State var Count = 0
+    @State var Count = 1
     
-    let timer = Timer.publish
+    
+    
+    var timer = Timer.scheduledTimer(withTimeInterval: 1, repeats: true) {_ in
+            self.Count -= 1
+            self.hour = self.Count / 3600
+            self.minute = (self.Count - self.hour * 3600) / 60
+            self.second = (self.Count - self.hour * 3600 - self.minute * 60)
+        }
+    }
     
     var body: some View {
         NavigationView{
             
             VStack{
-                //                 NavigationLink(destination: TimeView(),isActive: $isStart){EmptyView()}
                 if isStart {
                     ZStack {
                         Circle()
                             .stroke(Color.gray, lineWidth: 20)
                             .opacity(0.1)
-                        // 4.
                         Circle()
                             .trim(from: 0, to: sec)
                             .stroke(Color.green, lineWidth: 20)
                             .opacity(0.7)
                             .rotationEffect(.degrees(-90))
-                            // 5.
                             .overlay(
-                                Text(Start())
-                        )
+                                Text(TimeDisplay()).onAppear(perform: {
+                                    _ = self.timer
+                                })
+                            )
+                            
                         
                     }.padding(20)
                         .frame(width:300)
@@ -114,15 +123,20 @@ struct TimerView: View {
                     Button(action: {
                         if !self.isStart{
                                 self.Count = self.hour * 3600 + self.minute * 60 + self.second
+                                self.isStart.toggle()
                         }
-                        self.isStart.toggle()
                     }) {
                         Circle()
                             .frame(width:70)
                             .opacity(0.5)
                     }.overlay(Text("Start"))
                     
-                    Button(action: {self.isStart.toggle()}) {
+                    Button(action: {
+                        if (self.isStart) {
+                            self.isStop.toggle()
+                        }
+                    })
+                    {
                         Circle()
                             .frame(width:70)
                             .opacity(0.5)
@@ -132,20 +146,12 @@ struct TimerView: View {
         }
     }
     
-    func Start() -> String {
+    func TimeDisplay() -> String {
         var ctr = ""
         if (self.Count <= 0){
             return "Finish!"
         }
-        
-        self.hour = self.Count / 3600
-        self.minute = (self.Count - self.hour * 3600) / 60
-        self.second = self.Count - self.hour * 3600 - self.minute * 60
-        print(self.hour)
-        print(self.minute)
-        print(self.second)
         ctr = String(format: "%02d:%02d:%02d", self.hour, self.minute, self.second)
-        
         return ctr
         
     }
